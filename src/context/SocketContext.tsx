@@ -1,3 +1,5 @@
+"use client"
+
 import { useUser } from "@clerk/nextjs";
 import { User } from "@clerk/nextjs/server";
 import { error } from "console";
@@ -9,6 +11,7 @@ import { OngoingCall, Participants, SocketUser } from "../../types/page";
 interface iSocketContext {
     onlineUsers: SocketUser[] | null
     ongoingCall: OngoingCall | null
+    localStream: MediaStream | null
     handleCall : (user: SocketUser) => void
 }
 export const SocketContext = createContext<iSocketContext | null>(null)
@@ -20,15 +23,46 @@ export const SocketContextProvider = ({ children }: { children: React.ReactNode 
     const [isSocketConnected, setIsSocketConnected] = useState(false);
     const [onlineUsers, setOnlineUsers] = useState<SocketUser[] | null>(null);
     const [ongoingCall, setOngoingCall] = useState<OngoingCall | null>(null);
+    const [localStream , setLocalStream] = useState<MediaStream | null>(null);
 
     const currentSocketUser = onlineUsers?.find(onlineUser => onlineUser.userId === user?.id);
 
     // console.log("IsSocketConnect:>>>", isSocketConnected);
     // console.log("OnlineUsers>>>", onlineUsers);
+     
+    //Webrtc implementation..
+    const getMediaStream = useCallback(async(faceMode?: string)=>{
+             if(localStream) return localStream;
+
+             try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput')
+
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: true,
+                    video:{
+                        width:{min: 640, ideal: 1280, max:1920},
+                        height:{min: 360, ideal: 720, max:1080},
+                        frameRate:{min: 16, ideal: 30, max:30},
+                        facingMode: videoDevices.length > 0 ? faceMode : undefined
+                    }
+                });
+                setLocalStream(stream);
+                return stream;
+             } catch (error) {
+                console.log("Failed to load a stream", error);
+                setLocalStream(null);
+                return null;
+             }
+    },[localStream]);
 
     //Handle Calls 
-    const handleCall = useCallback((user: SocketUser) => {
+    const handleCall = useCallback(async(user: SocketUser) => {
         if (!currentSocketUser || !socket) return;
+
+        const stream = await getMediaStream();
+        if(!stream) return;
+
         const participants = {
             caller: currentSocketUser,
             receiver: user
@@ -103,7 +137,7 @@ export const SocketContextProvider = ({ children }: { children: React.ReactNode 
            }
     },[socket, isSocketConnected , user, onIncomingCall])
 
-    return <SocketContext.Provider value={{ onlineUsers , handleCall, ongoingCall}}>
+    return <SocketContext.Provider value={{ onlineUsers , handleCall, ongoingCall , localStream}}>
         {children}
     </SocketContext.Provider>
 }
