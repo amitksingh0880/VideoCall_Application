@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 import next from "next";
 import { Server } from "socket.io";
+import onCall from './scoketEvents/onCall.js'
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -9,11 +10,12 @@ const port = 3000;
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
 
+export let io;
 
 app.prepare().then(() => {
   const httpServer = createServer(handler);
 
-  const io = new Server(httpServer);
+  io = new Server(httpServer);
   let onlineUsers = []
 
   io.on("connection", (socket) => {
@@ -33,7 +35,10 @@ app.prepare().then(() => {
       onlineUsers = onlineUsers.filter(user => user.socketId != socket.id)
 
       io.emit('getUsers', onlineUsers)
-    })
+    });
+
+    //Call Events...
+    socket.on("call", onCall);
   });
 
   httpServer
@@ -45,13 +50,3 @@ app.prepare().then(() => {
       console.log(`> Ready on http://${hostname}:${port}`);
     });
 });
-
-// httpServer
-//   .once("error", (err) => {
-//     console.error(err);
-//     process.exit(1);
-//   })
-//   .listen(port, () => {
-//     console.log(`> Ready on http://${hostname}:${port}`);
-//   });
-// });

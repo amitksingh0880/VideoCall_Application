@@ -4,6 +4,8 @@ import { Inter } from "next/font/google"
 import { ClerkProvider, SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import Navbar from "@/components/layout/Navbar";
 import SocketProvider from "@/providers/SocketProvider";
+import { cn } from "@/lib/utils";
+import { relative } from "path";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,7 +22,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={inter.className}>
+        <body className={cn(inter.className, 'relative')}>
           <SocketProvider>
             <main className="flex flex-col min-h-screen bg-secondary">
               <Navbar />
