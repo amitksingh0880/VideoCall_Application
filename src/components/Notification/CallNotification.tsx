@@ -1,15 +1,3 @@
-// import { useSocket } from "@/context/SocketContext";
-
-// const CallNotification = () => {
-
-//     const { ongoingCall } = useSocket();
-//     if(!ongoingCall?.isRinging) return;
-//     return (<div className="absolute ">
-
-//     </div>)
-// }
-
-// export default CallNotification;
 "use client";
 
 import { useState } from "react";
@@ -19,30 +7,31 @@ import { MdCallEnd } from "react-icons/md";
 
 const CallNotification = () => {
   const { ongoingCall, handleAcceptCall, handleDeclineCall } = useSocket();
-  const [callDeclined, setCallDeclined] = useState(false);
+  const [callEnded, setCallEnded] = useState(false);
 
-  const declineCall = () => {
-    setCallDeclined(true); // Show "Call Declined" message
+  const endCall = () => {
+    setCallEnded(true); // Show "Call Declined" or "Call Ended" message
     handleDeclineCall({
-      ongoingCall: ongoingCall ?? undefined, // Safely handle null or undefined
+      ongoingCall: ongoingCall ?? undefined, // Ensure null safety
       isEmitHangup: true,
     });
 
-    // Hide message after a short delay (optional)
+    // Optionally hide the message after a delay
     setTimeout(() => {
-      setCallDeclined(false);
-    }, 3000); // 3 seconds
+      setCallEnded(false);
+    }, 3000);
   };
 
-  // If no ongoing call and no declined message, return null
-  if (!ongoingCall?.isRinging && !callDeclined) return null;
+  if (!ongoingCall?.isRinging && !callEnded) return null;
 
   return (
     <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
-      {callDeclined ? (
-        // Display "Call Declined" Message
+      {callEnded ? (
+        // Show "Call Ended" message
         <div className="bg-white p-4 rounded-lg shadow-lg text-center w-96">
-          <h2 className="text-xl font-bold text-red-600">Call Declined</h2>
+          <h2 className="text-xl font-bold text-red-600">
+            {ongoingCall?.isRinging ? "Call Declined" : "Call Ended"}
+          </h2>
         </div>
       ) : (
         // Show Incoming Call Notification
@@ -77,7 +66,7 @@ const CallNotification = () => {
             </button>
             <button
               className="flex items-center justify-center bg-red-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-red-700 transition-colors"
-              onClick={declineCall}
+              onClick={endCall}
             >
               <MdCallEnd className="mr-2" />
               Decline

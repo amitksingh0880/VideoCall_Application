@@ -1,98 +1,3 @@
-// "use client";
-
-// import { useSocket } from "@/context/SocketContext";
-// import VideoContainer from "./VideoContainer";
-// import { useCallback, useEffect, useState } from "react";
-// import { MdMic, MdMicOff, MdVideocam, MdVideocamOff } from "react-icons/md";
-
-// const VideoCall = () => {
-//     const { localStream, peer, ongoingCall } = useSocket();
-//     const [isMicOn, setIsMicOn] = useState(false);
-//     const [isVideoOn, setIsVideoOn] = useState(false);
-
-//     useEffect(() => {
-//         if (localStream) {
-//             const videoTrack = localStream.getVideoTracks()[0]
-//             setIsVideoOn(videoTrack.enabled);
-//             const audioTrack = localStream.getAudioTracks()[0]
-//             setIsMicOn(audioTrack.enabled);
-//         }
-//     }, [localStream]);
-
-//     const toggleCamera = useCallback(() => {
-//         if (localStream) {
-//             const videoTrack = localStream.getVideoTracks()[0]
-//             videoTrack.enabled = !videoTrack.enabled;
-//             setIsVideoOn(videoTrack.enabled);
-//         }
-//     }, [localStream]);
-
-//     const toggleMic = useCallback(() => {
-//         if (localStream) {
-//             const audioTrack = localStream.getAudioTracks()[0]
-//             audioTrack.enabled = !audioTrack.enabled;
-//             setIsMicOn(audioTrack.enabled);
-//         }
-//     }, [localStream]);
-
-//     const isOnCall = localStream && peer && ongoingCall ? true : false
-
-//     return (
-//         <div className="flex flex-col items-center justify-center min-h-screen">
-//             {/* Video Container */}
-//             <div className="mb-8 relative">
-//                 {localStream && (
-//                     <VideoContainer
-//                         stream={localStream}
-//                         isLocalStream={true}
-//                         isOnCall={isOnCall}
-//                     />
-//                 )}
-//                 {peer && peer.stream && (
-//                     <VideoContainer
-//                         stream={peer.stream}
-//                         isLocalStream={false}  
-//                         isOnCall={isOnCall}
-//                     />
-//                 )}
-//             </div>
-
-//             {/* Control Buttons */}
-//             <div className="flex items-center space-x-4 bg-white bg-opacity-20 backdrop-blur-md px-6 py-4 rounded-lg shadow-lg">
-//                 {/* Microphone Toggle */}
-//                 <button
-//                     onClick={toggleMic}
-//                     className="flex items-center justify-center w-12 h-12 bg-gray-800 text-white rounded-full shadow-md hover:bg-gray-700 transition-transform transform hover:scale-110"
-//                     title={isMicOn ? "Mute Microphone" : "Unmute Microphone"}
-//                 >
-//                     {isMicOn ? <MdMicOff size={28} /> : <MdMic size={28} />}
-//                 </button>
-
-//                 {/* End Call Button */}
-//                 <button
-//                     className="flex items-center justify-center px-6 py-3 bg-red-600 text-white font-bold rounded-full shadow-lg hover:bg-red-500 transition-transform transform hover:scale-110"
-//                     onClick={() => { }}
-//                     title="End Call"
-//                 >
-//                     End Call
-//                 </button>
-
-//                 {/* Camera Toggle */}
-//                 <button
-//                     onClick={toggleCamera}
-//                     className="flex items-center justify-center w-12 h-12 bg-gray-800 text-white rounded-full shadow-md hover:bg-gray-700 transition-transform transform hover:scale-110"
-//                     title={isVideoOn ? "Turn Off Camera" : "Turn On Camera"}
-//                 >
-//                     {isVideoOn ? <MdVideocamOff size={28} /> : <MdVideocam size={28} />}
-//                 </button>
-//             </div>
-//         </div>
-
-//     );
-// };
-
-// export default VideoCall;
-
 "use client";
 
 import { useSocket } from "@/context/SocketContext";
@@ -105,6 +10,7 @@ const VideoCall = () => {
     const [isMicOn, setIsMicOn] = useState(false);
     const [isVideoOn, setIsVideoOn] = useState(false);
 
+    // Initialize microphone and camera states
     useEffect(() => {
         if (localStream) {
             const videoTrack = localStream.getVideoTracks()[0];
@@ -114,6 +20,7 @@ const VideoCall = () => {
         }
     }, [localStream]);
 
+    // Handle camera toggle
     const toggleCamera = useCallback(() => {
         if (localStream) {
             const videoTrack = localStream.getVideoTracks()[0];
@@ -122,6 +29,7 @@ const VideoCall = () => {
         }
     }, [localStream]);
 
+    // Handle microphone toggle
     const toggleMic = useCallback(() => {
         if (localStream) {
             const audioTrack = localStream.getAudioTracks()[0];
@@ -130,7 +38,22 @@ const VideoCall = () => {
         }
     }, [localStream]);
 
-    const isOnCall = localStream && peer && ongoingCall ? true : false;
+    // Handle ending the call
+    const endCall = () => {
+        handleDeclineCall({
+            ongoingCall: ongoingCall ? ongoingCall : undefined,
+            isEmitHangup: true,
+        });
+    };
+
+    // Render only when the call is ongoing
+    if (!ongoingCall) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-100">
+                <h2 className="text-2xl font-semibold text-gray-600">Waiting for the call to start...</h2>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
@@ -141,7 +64,7 @@ const VideoCall = () => {
                     <VideoContainer
                         stream={localStream}
                         isLocalStream={true}
-                        isOnCall={isOnCall}
+                        isOnCall={true}
                     />
                 )}
                 {/* Remote Stream */}
@@ -149,7 +72,7 @@ const VideoCall = () => {
                     <VideoContainer
                         stream={peer.stream}
                         isLocalStream={false}
-                        isOnCall={isOnCall}
+                        isOnCall={true}
                     />
                 )}
             </div>
@@ -159,10 +82,11 @@ const VideoCall = () => {
                 {/* Microphone Toggle */}
                 <button
                     onClick={toggleMic}
-                    className={`flex items-center justify-center w-12 h-12 rounded-full shadow-md transition ${isMicOn
+                    className={`flex items-center justify-center w-12 h-12 rounded-full shadow-md transition ${
+                        isMicOn
                             ? "bg-red-500 text-white hover:bg-red-400"
                             : "bg-gray-800 text-white hover:bg-gray-700"
-                        }`}
+                    }`}
                     title={isMicOn ? "Mute Microphone" : "Unmute Microphone"}
                 >
                     {isMicOn ? <MdMicOff size={28} /> : <MdMic size={28} />}
@@ -171,7 +95,7 @@ const VideoCall = () => {
                 {/* End Call Button */}
                 <button
                     className="flex items-center justify-center px-6 py-3 bg-red-600 text-white font-bold rounded-full shadow-md hover:bg-red-500 transition"
-                    onClick={() => handleDeclineCall({ ongoingCall: ongoingCall ? ongoingCall : undefined, isEmitHangup: true })}
+                    onClick={endCall}
                     title="End Call"
                 >
                     <MdCallEnd size={28} />
@@ -180,10 +104,11 @@ const VideoCall = () => {
                 {/* Camera Toggle */}
                 <button
                     onClick={toggleCamera}
-                    className={`flex items-center justify-center w-12 h-12 rounded-full shadow-md transition ${isVideoOn
+                    className={`flex items-center justify-center w-12 h-12 rounded-full shadow-md transition ${
+                        isVideoOn
                             ? "bg-green-500 text-white hover:bg-green-400"
                             : "bg-gray-800 text-white hover:bg-gray-700"
-                        }`}
+                    }`}
                     title={isVideoOn ? "Turn Off Camera" : "Turn On Camera"}
                 >
                     {isVideoOn ? <MdVideocamOff size={28} /> : <MdVideocam size={28} />}
@@ -194,4 +119,3 @@ const VideoCall = () => {
 };
 
 export default VideoCall;
-

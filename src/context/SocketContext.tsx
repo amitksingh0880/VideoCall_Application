@@ -90,8 +90,8 @@ export const SocketContextProvider = ({ children }: { children: React.ReactNode 
         })
     }, [socket, user, ongoingCall]);
 
-    const handleDeclineCall = useCallback((data : { ongoingCall?: OngoingCall | null, isEmitDecline?: boolean}) => { 
-        if(socket && user && data.ongoingCall && data.isEmitDecline){
+    const handleDeclineCall = useCallback((data : { ongoingCall?: OngoingCall | null, isEmitHangup?: boolean}) => { 
+        if(socket && user && data.ongoingCall && data.isEmitHangup){
             socket.emit('hangup',{
                 ongoingCall : data.ongoingCall,
                 userHangingupId: user.id
@@ -192,6 +192,10 @@ export const SocketContextProvider = ({ children }: { children: React.ReactNode 
         const receiverStream = await getMediaStream();
         if (!receiverStream) {
             console.log("Could not get Stream!!");
+            handleDeclineCall({
+                ongoingCall: ongoingCall ? ongoingCall : undefined,
+                isEmitHangup: true,
+            })
             return;
         }
 
