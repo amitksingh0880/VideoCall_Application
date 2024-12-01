@@ -10,7 +10,6 @@ const VideoCall = () => {
     const [isMicOn, setIsMicOn] = useState(false);
     const [isVideoOn, setIsVideoOn] = useState(false);
 
-    // Initialize microphone and camera states
     useEffect(() => {
         if (localStream) {
             const videoTrack = localStream.getVideoTracks()[0];
@@ -20,7 +19,6 @@ const VideoCall = () => {
         }
     }, [localStream]);
 
-    // Handle camera toggle
     const toggleCamera = useCallback(() => {
         if (localStream) {
             const videoTrack = localStream.getVideoTracks()[0];
@@ -29,7 +27,6 @@ const VideoCall = () => {
         }
     }, [localStream]);
 
-    // Handle microphone toggle
     const toggleMic = useCallback(() => {
         if (localStream) {
             const audioTrack = localStream.getAudioTracks()[0];
@@ -38,22 +35,7 @@ const VideoCall = () => {
         }
     }, [localStream]);
 
-    // Handle ending the call
-    const endCall = () => {
-        handleDeclineCall({
-            ongoingCall: ongoingCall ? ongoingCall : undefined,
-            isEmitHangup: true,
-        });
-    };
-
-    // Render only when the call is ongoing
-    if (!ongoingCall) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-100">
-                <h2 className="text-2xl font-semibold text-gray-600">Waiting for the call to start...</h2>
-            </div>
-        );
-    }
+    const isOnCall = localStream && peer && ongoingCall ? true : false;
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
@@ -64,7 +46,7 @@ const VideoCall = () => {
                     <VideoContainer
                         stream={localStream}
                         isLocalStream={true}
-                        isOnCall={true}
+                        isOnCall={isOnCall}
                     />
                 )}
                 {/* Remote Stream */}
@@ -72,7 +54,7 @@ const VideoCall = () => {
                     <VideoContainer
                         stream={peer.stream}
                         isLocalStream={false}
-                        isOnCall={true}
+                        isOnCall={isOnCall}
                     />
                 )}
             </div>
@@ -95,7 +77,7 @@ const VideoCall = () => {
                 {/* End Call Button */}
                 <button
                     className="flex items-center justify-center px-6 py-3 bg-red-600 text-white font-bold rounded-full shadow-md hover:bg-red-500 transition"
-                    onClick={endCall}
+                    onClick={() => handleDeclineCall({ongoingCall: ongoingCall? ongoingCall: undefined, isEmitHangup: true})}
                     title="End Call"
                 >
                     <MdCallEnd size={28} />
@@ -119,3 +101,4 @@ const VideoCall = () => {
 };
 
 export default VideoCall;
+
