@@ -2,6 +2,8 @@ import { createServer } from "node:http";
 import next from "next";
 import { Server } from "socket.io";
 import onCall from './scoketEvents/onCall.js'
+import onWebrtcSignal from './scoketEvents/onWebrtcSignal.js'
+import onHangup from './scoketEvents/onHangup.js'
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -39,6 +41,8 @@ app.prepare().then(() => {
 
     //Call Events...
     socket.on("call", onCall);
+    socket.on('webrtcSignal', onWebrtcSignal);
+    socket.on('hangup', onHangup);
   });
 
   httpServer
